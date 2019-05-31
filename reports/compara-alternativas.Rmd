@@ -26,7 +26,7 @@ dados = read_csv(here::here("data/satisfacoes.csv"),
 glimpse(dados)
 ```
 
-
+#Comparando baseline com like/dislike
 ```{r}
 comparacao1 = dados %>% 
     filter(scenario %in% c("baseline", "like/dislike"))
@@ -55,3 +55,89 @@ ci1 = boot(data = comparacao1,
 ci1
 ```
 
+#Comparando baseline com combined
+```{r}
+comparacao2 = dados %>% 
+    filter(scenario %in% c("baseline", "combined"))
+
+theta <- function(d, i) {
+    agrupado = d %>% 
+        slice(i) %>% 
+        group_by(scenario) %>% 
+        summarise(media = mean(satisfaction))
+    b = agrupado %>% filter(scenario == "baseline") %>% pull(media)
+    c = agrupado %>% filter(scenario == "combined") %>% pull(media)
+    c - b
+}
+
+theta(comparacao2, i = 1:NROW(comparacao2))
+```
+
+```{r}
+ci2 = boot(data = comparacao2,
+           statistic = theta,
+           R = 2000) %>%
+    tidy(conf.level = .95,
+         conf.method = "bca",
+         conf.int = TRUE)
+
+ci2
+```
+
+#Comparando baseline com skip
+```{r}
+comparacao3 = dados %>% 
+    filter(scenario %in% c("baseline", "skip"))
+
+theta <- function(d, i) {
+    agrupado = d %>% 
+        slice(i) %>% 
+        group_by(scenario) %>% 
+        summarise(media = mean(satisfaction))
+    b = agrupado %>% filter(scenario == "baseline") %>% pull(media)
+    s = agrupado %>% filter(scenario == "skip") %>% pull(media)
+    s - b
+}
+
+theta(comparacao3, i = 1:NROW(comparacao3))
+```
+
+```{r}
+ci3 = boot(data = comparacao3,
+           statistic = theta,
+           R = 2000) %>%
+    tidy(conf.level = .95,
+         conf.method = "bca",
+         conf.int = TRUE)
+
+ci3
+```
+
+#Comparando combined com skip
+```{r}
+comparacao4 = dados %>% 
+    filter(scenario %in% c("combined", "skip"))
+
+theta <- function(d, i) {
+    agrupado = d %>% 
+        slice(i) %>% 
+        group_by(scenario) %>% 
+        summarise(media = mean(satisfaction))
+    c = agrupado %>% filter(scenario == "combined") %>% pull(media)
+    s = agrupado %>% filter(scenario == "skip") %>% pull(media)
+    s - c
+}
+
+theta(comparacao3, i = 1:NROW(comparacao4))
+```
+
+```{r}
+ci4 = boot(data = comparacao4,
+           statistic = theta,
+           R = 2000) %>%
+    tidy(conf.level = .95,
+         conf.method = "bca",
+         conf.int = TRUE)
+
+ci4
+```
